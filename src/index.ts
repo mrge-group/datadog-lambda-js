@@ -21,9 +21,11 @@ import {
 } from "./utils";
 import { getEnhancedMetricTags } from "./metrics/enhanced-metrics";
 import { DatadogTraceHeaders } from "./trace/context/extractor";
+import {Tracer} from "dd-trace";
 
 // Backwards-compatible export, TODO deprecate in next major
 export { DatadogTraceHeaders as TraceHeaders } from "./trace/context/extractor";
+export { initTracer } from "./trace";
 export const apiKeyEnvVar = "DD_API_KEY";
 export const apiKeyKMSEnvVar = "DD_KMS_API_KEY";
 export const captureLambdaPayloadEnvVar = "DD_CAPTURE_LAMBDA_PAYLOAD";
@@ -98,6 +100,7 @@ const initTime = Date.now();
 /**
  * Wraps your AWS lambda handler functions to add tracing/metrics support
  * @param handler A lambda handler function.
+ * @param tracer The tracer to be used.
  * @param config Configuration options for datadog.
  * @returns A wrapped handler function.
  *
@@ -109,12 +112,13 @@ const initTime = Date.now();
  */
 export function datadog<TEvent, TResult>(
   handler: Handler<TEvent, TResult> | any,
+  tracer: Tracer,
   config?: Partial<Config>,
 ): Handler<TEvent, TResult> | any {
   const finalConfig = getConfig(config);
   const metricsListener = new MetricsListener(new KMSService(), finalConfig);
 
-  const traceListener = new TraceListener(finalConfig);
+  const traceListener = new TraceListener(tracer, finalConfig);
 
   // Only wrap the handler once unless forced
   const _ddWrappedKey = "_ddWrapped";

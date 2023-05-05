@@ -19,6 +19,8 @@ import {
   ImportModuleError,
   UserCodeSyntaxError,
 } from "./errors";
+import {logDebug} from "../utils";
+import {Tracer} from "dd-trace";
 
 const module_importer = require("./module_importer");
 const FUNCTION_EXPR = /^([^.]*)\.(.*)$/;

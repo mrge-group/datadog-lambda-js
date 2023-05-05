@@ -18,6 +18,7 @@ import { TraceContext, TraceContextService, TraceSource } from "./trace-context-
 import { StepFunctionContext, StepFunctionContextService } from "./step-function-service";
 import { XrayService } from "./xray-service";
 import { AUTHORIZING_REQUEST_ID_HEADER } from "./context/extractors/http";
+import {Tracer} from "dd-trace";
 export type TraceExtractor = (event: any, context: Context) => Promise<TraceContext> | TraceContext;
 
 export interface TraceConfig {
@@ -80,8 +81,8 @@ export class TraceListener {
     return this.contextService.currentTraceHeaders;
   }
 
-  constructor(private config: TraceConfig) {
-    this.tracerWrapper = new TracerWrapper();
+  constructor(private readonly tracer: Tracer, private config: TraceConfig) {
+    this.tracerWrapper = new TracerWrapper(tracer);
     this.contextService = new TraceContextService(this.tracerWrapper, this.config);
     this.inferrer = new SpanInferrer(this.tracerWrapper);
   }
